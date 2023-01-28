@@ -18,33 +18,39 @@ catch (err) {
     console.log(err)
 }
 
-// Q U I Z
-const quizSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    question: [{ type: mongoose.ObjectId, ref: "Flashcard" }]
+
+// U S E R
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true },
+    password: { type: String, required: true}
 })
 
-const QuizModel = mongoose.model('Quiz', quizSchema)
-
-// S U B J E C T
-const subjectSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    quizIds: { type: Array, required: false }
-})
-const SubjectModel = mongoose.model('Subject', subjectSchema)
 
 // F L A S H C A R D
 const flashcardSchema = new mongoose.Schema({
     question: { type: String, required: true },
-    correctAnswer: { type: String, required: true },
-    answers: {
-        a: {type: String, required: true},
-        b: {type: String, required: true},
-        c: {type: String, required: true},
-        d: {type: String, required: true}
-    }
+    answerOptions: [{
+        text: { type: String, required: true },
+        isCorrectOption: { type: Boolean, required: true}
+    }]
 })
+
+// Q U I Z
+const quizSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    subjectID: { type: mongoose.ObjectId, ref: 'Subject'},
+    flashcards: [ flashcardSchema ]
+})
+
+// S U B J E C T
+const subjectSchema = new mongoose.Schema({
+    userId: { type: mongoose.ObjectId, ref: 'User' },
+    name: { type: String, required: true },
+})
+
+const QuizModel = mongoose.model('Quiz', quizSchema)
+const SubjectModel = mongoose.model('Subject', subjectSchema)
 const FlashcardModel = mongoose.model('Flashcard', flashcardSchema)
+const UserModel = mongoose.model('User', userSchema)
 
-
-export { QuizModel, FlashcardModel, SubjectModel, dbClose }
+export { QuizModel, FlashcardModel, SubjectModel, UserModel, dbClose }
