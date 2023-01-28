@@ -1,6 +1,7 @@
 import express from 'express'
-import { FlashcardModel, SubjectModel, QuizModel} from './db.js'
 import quizRoutes from './routes/quiz.js'
+import subjectRoutes from './routes/subject.js'
+
 import cors from 'cors'
 
 const api_server = express()
@@ -12,6 +13,8 @@ api_server.use(express.json())
 api_server.get('/', (request, response) => response.send({ info: 'CA QUIZ' }))
 
 api_server.use('/quiz', quizRoutes)
+
+api_server.use('/subject', subjectRoutes)
 
 const port = process.env.PORT || 4001
 
