@@ -1,4 +1,4 @@
-import { FlashcardModel, SubjectModel, QuizModel, UserModel, dbClose } from './db.js'
+import { FlashcardModel, SubjectModel, QuizModel, UserModel, dbClose } from '../src/db.js'
 
 /*
             !!! READ ME !!
