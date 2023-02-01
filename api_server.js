@@ -1,6 +1,6 @@
 import express from 'express'
-import quizRoutes from './routes/quiz.js'
-import subjectRoutes from './routes/subject.js'
+import quizRoutes from './src/routes/quiz.js'
+import subjectRoutes from './src/routes/subject.js'
 
 import cors from 'cors'
 
