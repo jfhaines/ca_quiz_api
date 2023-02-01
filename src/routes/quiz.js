@@ -6,12 +6,12 @@ import {validateAllCards} from '../validation.js';
 const router = express.Router()
 
 
-async function selectAll(){
-    return QuizModel.find().select({_id: 1, name: 1});
+function selectAll(){
+    return QuizModel.find().select({_id: 1, name: 1})
 }
 
 
-async function selectOneQuiz(quizId) {
+function selectOneQuiz(quizId) {
     return QuizModel.findById(quizId);
 }
 
@@ -35,13 +35,13 @@ async function quizCRUD( { subjectId, quizId, quizName, flashcards } ) {
 
 // List the available quizzes, name used for display, _id used for selection
 router.get('/', async (req, res) => {
-    res.send(selectAll())
+    res.send(await selectAll())
 })
 
 // Select card by _id to return flashcards
 router.get('/cards', async (req, res) => {
     const quizId = await req.query.quizId
-    res.send(selectOneQuiz(quizId))
+    res.send(await selectOneQuiz(quizId))
 })
 
 
