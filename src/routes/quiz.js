@@ -39,8 +39,8 @@ router.get('/', async (req, res) => {
 })
 
 // Select card by _id to return flashcards
-router.get('/cards', async (req, res) => {
-    const quizId = await req.query.quizId
+router.get('/:id', async (req, res) => {
+    const quizId = await req.params.id
     res.send(await selectOneQuiz(quizId))
 })
 
