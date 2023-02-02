@@ -27,6 +27,25 @@ const userSchema = new mongoose.Schema({
 
 
 // F L A S H C A R D
+/*
+summary: "Flashcard Schema",
+description: "used to create flashcards when creating or updating a quiz",
+requestSchema:
+    params:
+        question:
+            description: "A question to base the flashcard on",
+            required: true
+        answerOptions:
+            description: "An array of objects",
+            required: true // could make it false if there is utility in it
+            innerSchema: []
+                text:
+                    description: "An answer to the question that may or may not be correct",
+                    required: true
+                isCorrectOption:
+                    description: "Boolean value that determines if answer is correct",
+                    required: true
+ */
 const flashcardSchema = new mongoose.Schema({
     question: { type: String, required: true },
     answerOptions: [{
