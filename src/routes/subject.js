@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 // ADD NEW SUBJECT
 router.post('/new', async (req, res) => {
     try {
-        // 1. Create a new entry object with values passed in from the request
+        // if no userId is entered this default one will be provided
         const { userId = '63d21798e23e4990fd09255c', name, quiz = [] } = req.body
         const newSubject = { userId: userId, name: name, quiz: quiz }
 
@@ -27,13 +27,11 @@ router.post('/new', async (req, res) => {
 // UPDATE SUBJECT
 router.put('/update', async (req, res) => {
     try {
-        const { id, name } = req.body
+        const { userId = '63d21798e23e4990fd09255c', subjectId, subjectName } = req.body
 
-        const { userId } = await SubjectModel.findById(id).select({userId: 1, _id: 0})
+        const updateSubject = { userId: userId, name: subjectName }
 
-        const updateSubject = { userId: userId, name: name }
-
-        const update = await SubjectModel.findByIdAndUpdate(id, updateSubject, { returnDocument: 'after' })
+        const update = await SubjectModel.findByIdAndUpdate(subjectId, updateSubject, { returnDocument: 'after' })
 
         if (update) {
             res.send(update)
@@ -49,7 +47,7 @@ router.put('/update', async (req, res) => {
 // Delete
 router.delete('/delete', async (req, res) => {
     try {
-        const entry = await QuizModel.findByIdAndDelete(req.body.id)
+        const entry = await QuizModel.findByIdAndDelete(req.body.subjectId)
         if (entry) {
             res.sendStatus(204)
         } else {
