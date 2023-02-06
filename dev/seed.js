@@ -1,4 +1,5 @@
-import { FlashcardModel, SubjectModel, QuizModel, UserModel, dbClose } from '../src/db.js'
+import { SubjectModel, QuizModel, UserModel, dbClose } from '../src/db.js'
+import bcrypt from 'bcrypt'
 
 /*
             !!! READ ME !!
@@ -19,47 +20,95 @@ Could automate it, but haven't
 // await SubjectModel.deleteMany()
 // console.log('Deleted all Subjects')
 
+await UserModel.deleteMany()
+await SubjectModel.deleteMany()
 await QuizModel.deleteMany()
-console.log('Deleted all Quizes')
+console.log('Deleted all collections')
 
-const users = [
-    { username: "test", password: "test"}
+const user = await UserModel.create({ username: 'user', password: await bcrypt.hash('password', 10)})
+
+
+const subjectList = [
+    { name: 'German', userId: user._id },
+    { name: 'French', userId: user._id },
+    { name: 'Psychology', userId: user._id },
+    { name: 'MATH4051', userId: user._id }
 ]
 
-const subjects = [
-    {name: 'Live', userId: '63d21798e23e4990fd09255c'},
-    { name: 'Laugh', userId: '63d21798e23e4990fd09255c'},
-    { name: 'Love', userId: '63d21798e23e4990fd09255c'}
-]
+let subjects = await SubjectModel.insertMany(subjectList)
+// console.log(subjects[0]._id)
 
-const flashcards = [
+const quizList = [
     {
-        question: "Who am I",
-        answerOptions: [
-            { text: "Answer 1", isCorrectOption: Boolean(1)},
-            { text: "Answer 2", isCorrectOption: Boolean(0) },
-            { text: "Answer 3", isCorrectOption: Boolean(0) },
-            { text: "Answer 4", isCorrectOption: Boolean(0) }
-        ]
-    },
-    {
-        question: "What's My Name",
-        answerOptions: [
-            { text: "Answer 1", isCorrectOption: Boolean(1)},
-            { text: "Answer 2", isCorrectOption: Boolean(0) },
-            { text: "Answer 3", isCorrectOption: Boolean(0) },
-            { text: "Answer 4", isCorrectOption: Boolean(0) }
+        name: 'Quiz One',
+        subjectId: subjects[0]._id,
+        flashcards: [
+            {
+                question: "What does 'es tut mir leid' mean in German?",
+                answerOptions: [
+                    {
+                        text: 'Excuse me',
+                        isCorrectOption: false
+                    },
+                    {
+                        text: "I'm sorry",
+                        isCorrectOption: true
+                    },
+                    {
+                        text: "Good morning",
+                        isCorrectOption: false
+                    },
+                    {
+                        text: "Goodbye",
+                        isCorrectOption: false
+                    }
+                ],
+                takesTextInput: false
+            },
+            {
+                question: "How do you say good afternoon in German?",
+                answerOptions: [
+                    {
+                        text: 'Guten Morgen',
+                        isCorrectOption: false
+                    },
+                    {
+                        text: "Guten Abend",
+                        isCorrectOption: false
+                    },
+                    {
+                        text: "Guten Tag",
+                        isCorrectOption: true
+                    }
+                ],
+                takesTextInput: false
+            },
+            {
+                question: "How do you say hello in German?",
+                answerOptions: [
+                    {
+                        text: 'Hallo',
+                        isCorrectOption: true
+                    }
+                ],
+                takesTextInput: true
+            },
+            {
+                question: "How do you say Mother in German?",
+                answerOptions: [
+                    {
+                        text: 'Mutter',
+                        isCorrectOption: true
+                    }
+                ],
+                takesTextInput: false
+            },
         ]
     }
 ]
 
-const quizes = [
-    {
-        name: "Very Nice Quiz",
-        subjectID: '63d218149f6c29f31d5a50af',
-        flashcards: flashcards
-    }
-]
+let quizzes = await QuizModel.insertMany(quizList)
+
 
 // await FlashcardModel.insertMany(flashcards)
 // console.log('Inserted Flashcards')
@@ -67,7 +116,7 @@ const quizes = [
 // console.log('Inserted Users')
 // await SubjectModel.insertMany(subjects)
 // console.log('Inserted Subjects')
-await QuizModel.insertMany(quizes)
+
 console.log('Inserted Subjects')
 
 dbClose()

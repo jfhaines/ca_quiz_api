@@ -7,7 +7,7 @@ const router = express.Router()
 
 // Returns all the Quizzes, but just their names and id numbers
 function selectAll(){
-    return QuizModel.find().select({_id: 1, name: 1})
+    return QuizModel.find()
 }
 
 // Returns full detail about one quiz
@@ -72,7 +72,7 @@ router.post('/new', async (req, res) => {
         if (code === 500) { // for valid data 'code' would === undefined
             res.status(500).send(body)
         } else {
-            const entryData = { subjectID: subjectId, name: quizName, flashcards }
+            const entryData = { subjectId: subjectId, name: quizName, flashcards }
             QuizModel.create( entryData )
                 .then(v => { // v is the returned data from running QuizModel.create()
                     res.send(v)

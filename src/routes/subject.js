@@ -1,23 +1,45 @@
 import express from 'express'
 import { SubjectModel, QuizModel } from '../db.js'
+import mongoose from 'mongoose'
 
 const router = express.Router()
 
 // GET SUBJECTS
 router.get('/', async (req, res) => {
-    res.send(await SubjectModel.find().select({name: 1, _id: 1}))
+    try {
+        let subjects = await SubjectModel.find({ userId: req.userId }).populate('quizCount')
+        res.status(200).send(subjects)
+    } catch (err) {
+        res.status(500).send({ error: err.message })
+    }
+})
+
+router.get('/:subjectId', async (req, res) => {
+    console.log(req.params.subjectId)
+    let subject = SubjectModel.findById(req.params.subjectId)
+    let quizzes = QuizModel.aggregate([
+        { $match: { subjectId: mongoose.Types.ObjectId(req.params.subjectId) } },
+        { $project: { _id: 1, name: 1, flashcardCount: { $size: '$flashcards' } } }
+    ])
+    let data = await Promise.all([subject, quizzes])
+    console.log(data[1])
+    res.status(200).send({ subject: data[0], quizzes: data[1] })
+
+
+    // let data = await Promise.all([ subject, quizzes ])
+    // res.status(200).send({ subject: data[0], quizzes: data[1] })
 })
 
 // ADD NEW SUBJECT
-router.post('/new', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         // if no userId is entered this default one will be provided
-        const { userId = '63d21798e23e4990fd09255c', name, quiz = [] } = req.body
-        const newSubject = { userId: userId, name: name, quiz: quiz }
+        const { name } = req.body
+        const newSubject = { userId: req.userId, name: name }
 
-        const insertSubject = await SubjectModel.create(newSubject)
+        const subject = await SubjectModel.create(newSubject)
         // 3. Send the new entry with 201 status
-        res.status(201).send(await insertSubject)
+        res.status(201).send(subject)
     }
     catch (err) {
         res.status(500).send({ error: err.message })
@@ -25,18 +47,19 @@ router.post('/new', async (req, res) => {
 })
 
 // UPDATE SUBJECT
-router.put('/update', async (req, res) => {
+router.put('/:subjectId', async (req, res) => {
+    console.log('here')
     try {
-        const { userId = '63d21798e23e4990fd09255c', subjectId, subjectName } = req.body
-
-        const updateSubject = { userId: userId, name: subjectName }
-
-        const update = await SubjectModel.findByIdAndUpdate(subjectId, updateSubject, { returnDocument: 'after' })
-
-        if (update) {
-            res.send(update)
+        const { subjectId } = req.params
+        const { name } = req.body
+        const subject = { name: name }
+        console.log(subject, subjectId)
+        const result = await SubjectModel.findByIdAndUpdate(subjectId, subject, { returnDocument: 'after' })
+        console.log(result)
+        if (result) {
+            res.status(200).send(result)
         } else {
-            res.status(404).send({ error: 'Entry not found' })
+            res.status(404).send({ error: 'Subject not found' })
         }
     }
     catch (err) {
@@ -45,7 +68,7 @@ router.put('/update', async (req, res) => {
 })
 
 // Delete
-router.delete('/delete', async (req, res) => {
+router.delete('/:subjectId', async (req, res) => {
     try {
         const entry = await QuizModel.findByIdAndDelete(req.body.subjectId)
         if (entry) {
