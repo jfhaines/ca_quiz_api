@@ -86,5 +86,29 @@ router.delete('/:quizId/flashcard/:flashcardId', async (req, res) => {
     }
 })
 
+router.post('/:quizId/flashcard', async (req, res) => {
+    try {
+        const { quizId } = req.params
+        const { question, answerOptions, takesTextInput } = req.body
+        const flashcard = { question, answerOptions, takesTextInput }
+        
+        let result = await QuizModel.findOneAndUpdate(
+            { "_id": quizId },
+            { "$push": {
+                "flashcards": flashcard
+            }},
+            { returnDocument: 'after' } 
+        )
+        console.log(result)
+        if (result) {
+            res.status(201).send(result)
+        } else {
+            res.status(404).send({ error: 'Quiz not found' })
+        }
+    } catch (err) {
+        res.status(500).send({ error: err.message })
+    }
+})
+
 
 export default router
