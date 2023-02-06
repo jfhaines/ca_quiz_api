@@ -38,13 +38,13 @@ async function quizCRUD( { subjectId, quizId, quizName, flashcards } ) {
 
 
 // List the available quizzes, name used for display, _id used for selection
-router.get('/', async (req, res) => {
+router.get('/quiz/', async (req, res) => {
     res.send(await selectAll())
 })
 
 // Select card by _id to return flashcards
-router.get('/:id', async (req, res) => {
-    const quizId = await req.params.id
+router.get('/quiz/:quizId', async (req, res) => {
+    const quizId = req.params.quizId
     res.send(await selectOneQuiz(quizId))
 })
 
@@ -65,27 +65,19 @@ requestSchema:
             description: "Object containing flashcard values",
             required: false
  */
-router.post('/new', async (req, res) => {
-    // uses chain of .then() to execute asynchronously
-    quizCRUD(req.body).then(({ subjectId, quizName, flashcards, code, body}) => { // validates input supplied by request body
-        // code and body will only exist in this stage if invalid data has been supplied
-        if (code === 500) { // for valid data 'code' would === undefined
-            res.status(500).send(body)
-        } else {
-            const entryData = { subjectId: subjectId, name: quizName, flashcards }
-            QuizModel.create( entryData )
-                .then(v => { // v is the returned data from running QuizModel.create()
-                    res.send(v)
-                }).catch((error) => {
-                    console.warn(error)
-                    res.status(500).send({error: 'Server Error: Failed to update entry'}) // error at this stage would likely be an invalid subjectID TODO: check this theory
-                })
+router.post('/subject/:subjectId/quiz', async (req, res) => {
+    try {
+        // if no userId is entered this default one will be provided
+        const { name } = req.body
+        const newQuiz = { name: name, subjectId: req.params.subjectId, flashcards: [] }
 
-            }
-    }).catch((error) => {
-            console.warn(error)
-            res.status(500).send({error: 'Server Error: Failed to update entry'}) // error here should be server fault TODO: test this theory
-        })
+        const result = await QuizModel.create(newQuiz)
+        // 3. Send the new entry with 201 status
+        res.status(201).send(result)
+    }
+    catch (err) {
+        res.status(500).send({ error: err.message })
+    }
 })
 
 
@@ -119,39 +111,33 @@ Another call is then made to the DB for the updated Quiz.
 The method used in card.js updateAnswer() could probably be used to update the quiz in a simpler way
 TODO: simplify this methods operation
  */
-router.put('/update', async (req, res) => {
-    quizCRUD(req.body).then(({quizId, quizName, flashcards, code, body}) => {
-        if (code === 500) {
-            res.status(500).send(body)
+router.put('/quiz/:quizId', async (req, res) => {
+    try {
+        const { quizId } = req.params
+        const { name } = req.body
+        const quiz = { name: name }
+        const result = await QuizModel.findByIdAndUpdate(quizId, quiz, { returnDocument: 'after' })
+        if (result) {
+            res.status(200).send(result)
         } else {
-            QuizModel.updateOne(
-                {_id: quizId},
-                {name: quizName, $push: {flashcards: flashcards}}).then(v => { // quizName is written every time, so it needs to be entered even if it isn't changed
-                if (v.acknowledged) {
-                    selectOneQuiz(quizId).then(updatedQuiz => res.send(updatedQuiz))
-                } else {
-                    res.status(500).send({error: 'Server Error: Failed to update entry'})
-                }
-            }).catch((error) => {
-                console.warn(error)
-                res.status(500).send({error: 'Server Error: Failed to update entry'})
-            })
-
-        }}).catch((error) => {
-            console.warn(error)
-            res.status(500).send({error: 'Server Error: Failed to update entry'})
-        })
+            res.status(404).send({ error: 'Quiz not found' })
+        }
+    }
+    catch (err) {
+        res.status(500).send({ error: err.message })
+    }
 })
 
 
 // Delete
-router.delete('/', async (req, res) => {
+router.delete('/quiz/:quizId', async (req, res) => {
     try {
-        const entry = await QuizModel.findByIdAndDelete(req.body.quizId)
-        if (entry) {
+        let quizResult = await QuizModel.deleteOne({ _id: req.params.quizId })
+        console.log(quizResult)
+        if (quizResult && quizResult.deletedCount > 0) {
             res.sendStatus(204)
         } else {
-            res.status(404).send({ error: 'Entry not found' })
+            res.status(404).send({ error: 'Quiz not found' })
         }
     }
     catch (err) {

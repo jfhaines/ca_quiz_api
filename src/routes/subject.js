@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { request } from 'express'
 import { SubjectModel, QuizModel } from '../db.js'
 import mongoose from 'mongoose'
 
@@ -15,14 +15,12 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:subjectId', async (req, res) => {
-    console.log(req.params.subjectId)
     let subject = SubjectModel.findById(req.params.subjectId)
     let quizzes = QuizModel.aggregate([
         { $match: { subjectId: mongoose.Types.ObjectId(req.params.subjectId) } },
         { $project: { _id: 1, name: 1, flashcardCount: { $size: '$flashcards' } } }
     ])
     let data = await Promise.all([subject, quizzes])
-    console.log(data[1])
     res.status(200).send({ subject: data[0], quizzes: data[1] })
 
 
@@ -48,14 +46,11 @@ router.post('/', async (req, res) => {
 
 // UPDATE SUBJECT
 router.put('/:subjectId', async (req, res) => {
-    console.log('here')
     try {
         const { subjectId } = req.params
         const { name } = req.body
         const subject = { name: name }
-        console.log(subject, subjectId)
         const result = await SubjectModel.findByIdAndUpdate(subjectId, subject, { returnDocument: 'after' })
-        console.log(result)
         if (result) {
             res.status(200).send(result)
         } else {
@@ -70,11 +65,13 @@ router.put('/:subjectId', async (req, res) => {
 // Delete
 router.delete('/:subjectId', async (req, res) => {
     try {
-        const entry = await QuizModel.findByIdAndDelete(req.body.subjectId)
-        if (entry) {
+        let quizResult = await QuizModel.deleteMany({ subjectId: req.params.subjectId })
+        let subjectResult = await SubjectModel.deleteOne({ _id: req.params.subjectId })
+        console.log(subjectResult)
+        if (subjectResult && subjectResult.deletedCount > 0) {
             res.sendStatus(204)
         } else {
-            res.status(404).send({ error: 'Entry not found' })
+            res.status(404).send({ error: 'Subject not found' })
         }
     }
     catch (err) {

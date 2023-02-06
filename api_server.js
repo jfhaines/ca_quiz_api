@@ -36,17 +36,13 @@ api_server.use((req, res, next) => {
 
 api_server.get('/', (request, response) => response.send({ info: 'CA QUIZ' }))
 
-api_server.use('/quiz', quizRoutes)
+api_server.use('/', quizRoutes)
 
 api_server.use('/subject', subjectRoutes)
 
 
 api_server.use('/quiz/', flashcardRoutes)
 
-api_server.use((req, res, next) => {
-    console.log('here dude') 
-    next()
-})
 
 const port = process.env.PORT || 4001
 
